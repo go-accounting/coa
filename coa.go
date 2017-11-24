@@ -249,7 +249,7 @@ func (r *CoaRepository) SaveAccount(coaid string, account *Account) (*Account, e
 	return account, nil
 }
 
-func (r *CoaRepository) Indexes(coaid string, accountsNumbers []string) ([]int, error) {
+func (r *CoaRepository) Indexes(coaid string, accountsNumbers []string, tags []string) ([]int, error) {
 	if coaid == "" {
 		return nil, fmt.Errorf("Invalid argument: coaid is empty")
 	}
@@ -260,14 +260,17 @@ func (r *CoaRepository) Indexes(coaid string, accountsNumbers []string) ([]int, 
 	}
 	result := make([]int, len(accountsNumbers))
 	for i, n := range accountsNumbers {
+		result[i] = -1
 		for j, a := range accounts {
-			if a.Number == n {
+			if a.Number == n && collection(a.Tags).containsAll(tags) {
 				result[i] = j
 			}
 		}
 	}
 	return result, nil
 }
+
+// TODO: DeleteAccount
 
 func (coa *ChartOfAccounts) ValidationMessage() string {
 	if len(strings.TrimSpace(coa.Name)) == 0 {
@@ -360,3 +363,12 @@ func (c collection) indexOf(s string) int {
 }
 
 func (c collection) contains(s string) bool { return c.indexOf(s) != -1 }
+
+func (c collection) containsAll(ss []string) bool {
+	for _, s := range ss {
+		if !c.contains(s) {
+			return false
+		}
+	}
+	return true
+}

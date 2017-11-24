@@ -162,7 +162,7 @@ func TestIfAllAccountsIsSorted(t *testing.T) {
 	if accounts[0].Number != "1" || accounts[1].Number != "2" {
 		t.Errorf("Expected sorted but was %v %v", accounts[0].Number, accounts[1].Number)
 	}
-	idx, err := r.Indexes(coa.Id, []string{"1", "2"})
+	idx, err := r.Indexes(coa.Id, []string{"1", "2"}, nil)
 	check(t, err)
 	if idx[0] != 1 || idx[1] != 0 {
 		t.Errorf("Expected 1 0 but was %v %v", idx[0], idx[1])
