@@ -50,10 +50,10 @@ var inheritedProperties = map[string]string{
 }
 
 var nonInheritedProperties = map[string]string{
-	"debitBalance":  "",
-	"creditBalance": "",
-	"analytic":      "",
-	"synthetic":     "",
+	"increaseOnDebit":  "",
+	"increaseOnCredit": "",
+	"detail":           "",
+	"summary":          "",
 }
 
 type KeyValueStore interface {
@@ -172,8 +172,8 @@ func (r *CoaRepository) SaveAccount(coaid string, account *Account) (*Account, e
 			tags = append(tags, k)
 		}
 	}
-	if !collection(account.Tags).contains("analytic") && account.Id == "" {
-		tags = append(tags, "analytic")
+	if !collection(account.Tags).contains("detail") && account.Id == "" {
+		tags = append(tags, "detail")
 	}
 	account.Tags = tags
 	account.AsOf = time.Now()
@@ -230,13 +230,13 @@ func (r *CoaRepository) SaveAccount(coaid string, account *Account) (*Account, e
 			return nil, err
 		}
 		changed := false
-		i := collection(parent.Tags).indexOf("analytic")
+		i := collection(parent.Tags).indexOf("detail")
 		if i != -1 {
 			parent.Tags = append(parent.Tags[:i], parent.Tags[i+1:]...)
 			changed = true
 		}
-		if !collection(parent.Tags).contains("synthetic") {
-			parent.Tags = append(parent.Tags, "synthetic")
+		if !collection(parent.Tags).contains("summary") {
+			parent.Tags = append(parent.Tags, "summary")
 			changed = true
 		}
 		if changed {
@@ -292,10 +292,10 @@ func (account *Account) ValidationMessage(coaid string, r *CoaRepository) string
 	if collection(account.Tags).contains("balanceSheet") && collection(account.Tags).contains("incomeStatement") {
 		return "The statement must be either balance sheet or income statement"
 	}
-	if !collection(account.Tags).contains("debitBalance") && !collection(account.Tags).contains("creditBalance") {
+	if !collection(account.Tags).contains("increaseOnDebit") && !collection(account.Tags).contains("increaseOnCredit") {
 		return "The normal balance must be informed"
 	}
-	if collection(account.Tags).contains("debitBalance") && collection(account.Tags).contains("creditBalance") {
+	if collection(account.Tags).contains("increaseOnDebit") && collection(account.Tags).contains("increaseOnCredit") {
 		return "The normal balance must be either debit or credit"
 	}
 	count := 0
