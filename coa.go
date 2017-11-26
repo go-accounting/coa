@@ -1,6 +1,7 @@
 //go:generate msgp
 //msgp:ignore CoaRepository
-package coa // import "mcesar.io/coa"
+package coa
+
 import (
 	"fmt"
 	"sort"
