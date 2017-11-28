@@ -91,7 +91,7 @@ func TestSaveAccount(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	a, err := r.SaveAccount(coa.Id, &Account{Number: "1", Name: "a1", Tags: []string{"balanceSheet", "debitBalance"}})
+	a, err := r.SaveAccount(coa.Id, &Account{Number: "1", Name: "a1", Tags: []string{"balanceSheet", "increaseOnDebit"}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -111,11 +111,11 @@ func TestSaveAccount(t *testing.T) {
 	if len(accounts) != 1 {
 		t.Error("The account must be persisted")
 	}
-	if !collection(a.Tags).contains("analytic") {
-		t.Errorf("a.Tags %v does not contain analytic", a.Tags)
+	if !collection(a.Tags).contains("detail") {
+		t.Errorf("a.Tags %v does not contain detail", a.Tags)
 	}
 	_, err = r.SaveAccount(coa.Id, &Account{Number: "1.1", Name: "a1.1",
-		Parent: a.Id, Tags: []string{"balanceSheet", "debitBalance"}})
+		Parent: a.Id, Tags: []string{"balanceSheet", "increaseOnDebit"}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -126,11 +126,11 @@ func TestSaveAccount(t *testing.T) {
 	if len(accounts) != 2 {
 		t.Error("The account must be persisted")
 	}
-	if !collection(accounts[0].Tags).contains("synthetic") {
-		t.Errorf("accounts[0].Tags %v does not contains synthetic", accounts[0].Tags)
+	if !collection(accounts[0].Tags).contains("summary") {
+		t.Errorf("accounts[0].Tags %v does not contains summary", accounts[0].Tags)
 	}
-	if !collection(accounts[1].Tags).contains("analytic") {
-		t.Errorf("accounts[1].Tags %v does not contains analytic", accounts[1].Tags)
+	if !collection(accounts[1].Tags).contains("detail") {
+		t.Errorf("accounts[1].Tags %v does not contains detail", accounts[1].Tags)
 	}
 	if coa.RetainedEarningsAccount != "" {
 		t.Errorf("Expected empty but was %v", coa.RetainedEarningsAccount)
@@ -153,9 +153,9 @@ func TestIfAllAccountsIsSorted(t *testing.T) {
 	r := NewCoaRepository(store{})
 	coa, err := r.SaveChartOfAccounts(&ChartOfAccounts{Name: "coa"})
 	check(t, err)
-	_, err = r.SaveAccount(coa.Id, &Account{Number: "2", Name: "a2", Tags: []string{"balanceSheet", "debitBalance"}})
+	_, err = r.SaveAccount(coa.Id, &Account{Number: "2", Name: "a2", Tags: []string{"balanceSheet", "increaseOnDebit"}})
 	check(t, err)
-	_, err = r.SaveAccount(coa.Id, &Account{Number: "1", Name: "a1", Tags: []string{"balanceSheet", "debitBalance"}})
+	_, err = r.SaveAccount(coa.Id, &Account{Number: "1", Name: "a1", Tags: []string{"balanceSheet", "increaseOnDebit"}})
 	check(t, err)
 	accounts, err := r.AllAccounts(coa.Id)
 	check(t, err)
