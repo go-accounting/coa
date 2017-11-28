@@ -250,7 +250,7 @@ func (r *CoaRepository) SaveAccount(coaid string, account *Account) (*Account, e
 	return account, nil
 }
 
-func (r *CoaRepository) Indexes(coaid string, accountsNumbers []string, tags []string) ([]int, error) {
+func (r *CoaRepository) Indexes(coaid string, accountsIds []string, tags []string) ([]int, error) {
 	if coaid == "" {
 		return nil, fmt.Errorf("Invalid argument: coaid is empty")
 	}
@@ -259,11 +259,11 @@ func (r *CoaRepository) Indexes(coaid string, accountsNumbers []string, tags []s
 	if err != nil {
 		return nil, err
 	}
-	result := make([]int, len(accountsNumbers))
-	for i, n := range accountsNumbers {
+	result := make([]int, len(accountsIds))
+	for i, id := range accountsIds {
 		result[i] = -1
 		for j, a := range accounts {
-			if a.Number == n && collection(a.Tags).containsAll(tags) {
+			if a.Id == id && collection(a.Tags).containsAll(tags) {
 				result[i] = j
 			}
 		}
