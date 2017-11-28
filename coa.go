@@ -26,7 +26,7 @@ type Account struct {
 	Id      string    `json:"id"`
 	Number  string    `json:"number"`
 	Name    string    `json:"name"`
-	Tags    []string  `json:"tags"`
+	Tags    Tags      `json:"tags"`
 	Parent  string    `json:"parent"`
 	User    string    `json:"user"`
 	AsOf    time.Time `json:"timestamp"`
@@ -36,7 +36,7 @@ type Account struct {
 
 type ChartsOfAccounts []*ChartOfAccounts
 type Accounts []*Account
-type collection []string
+type Tags []string
 
 var inheritedProperties = map[string]string{
 	"balanceSheet":    "financial statement",
@@ -173,7 +173,7 @@ func (r *CoaRepository) SaveAccount(coaid string, account *Account) (*Account, e
 			tags = append(tags, k)
 		}
 	}
-	if !collection(account.Tags).contains("detail") && account.Id == "" {
+	if !account.Tags.Contains("detail") && account.Id == "" {
 		tags = append(tags, "detail")
 	}
 	account.Tags = tags
@@ -231,12 +231,12 @@ func (r *CoaRepository) SaveAccount(coaid string, account *Account) (*Account, e
 			return nil, err
 		}
 		changed := false
-		i := collection(parent.Tags).indexOf("detail")
+		i := parent.Tags.IndexOf("detail")
 		if i != -1 {
 			parent.Tags = append(parent.Tags[:i], parent.Tags[i+1:]...)
 			changed = true
 		}
-		if !collection(parent.Tags).contains("summary") {
+		if !parent.Tags.Contains("summary") {
 			parent.Tags = append(parent.Tags, "summary")
 			changed = true
 		}
@@ -263,7 +263,7 @@ func (r *CoaRepository) Indexes(coaid string, accountsIds []string, tags []strin
 	for i, id := range accountsIds {
 		result[i] = -1
 		for j, a := range accounts {
-			if a.Id == id && collection(a.Tags).containsAll(tags) {
+			if a.Id == id && a.Tags.ContainsAll(tags) {
 				result[i] = j
 			}
 		}
@@ -287,16 +287,16 @@ func (account *Account) ValidationMessage(coaid string, r *CoaRepository) string
 	if len(strings.TrimSpace(account.Name)) == 0 {
 		return "The name must be informed"
 	}
-	if !collection(account.Tags).contains("balanceSheet") && !collection(account.Tags).contains("incomeStatement") {
+	if !account.Tags.Contains("balanceSheet") && !account.Tags.Contains("incomeStatement") {
 		return "The financial statement must be informed"
 	}
-	if collection(account.Tags).contains("balanceSheet") && collection(account.Tags).contains("incomeStatement") {
+	if account.Tags.Contains("balanceSheet") && account.Tags.Contains("incomeStatement") {
 		return "The statement must be either balance sheet or income statement"
 	}
-	if !collection(account.Tags).contains("increaseOnDebit") && !collection(account.Tags).contains("increaseOnCredit") {
+	if !account.Tags.Contains("increaseOnDebit") && !account.Tags.Contains("increaseOnCredit") {
 		return "The normal balance must be informed"
 	}
-	if collection(account.Tags).contains("increaseOnDebit") && collection(account.Tags).contains("increaseOnCredit") {
+	if account.Tags.Contains("increaseOnDebit") && account.Tags.Contains("increaseOnCredit") {
 		return "The normal balance must be either debit or credit"
 	}
 	count := 0
@@ -331,7 +331,7 @@ func (account *Account) ValidationMessage(coaid string, r *CoaRepository) string
 			return "The number must start with parent's number"
 		}
 		for key, value := range inheritedProperties {
-			if collection(parent.Tags).contains(key) && !collection(account.Tags).contains(key) {
+			if parent.Tags.Contains(key) && !account.Tags.Contains(key) {
 				return "The " + value + " must be same as the parent"
 			}
 		}
@@ -354,7 +354,7 @@ func (r *CoaRepository) getAndUnmarshal(key string, v msgp.Unmarshaler) error {
 	return nil
 }
 
-func (c collection) indexOf(s string) int {
+func (c Tags) IndexOf(s string) int {
 	for i, each := range c {
 		if each == s {
 			return i
@@ -363,11 +363,11 @@ func (c collection) indexOf(s string) int {
 	return -1
 }
 
-func (c collection) contains(s string) bool { return c.indexOf(s) != -1 }
+func (c Tags) Contains(s string) bool { return c.IndexOf(s) != -1 }
 
-func (c collection) containsAll(ss []string) bool {
+func (c Tags) ContainsAll(ss []string) bool {
 	for _, s := range ss {
-		if !c.contains(s) {
+		if !c.Contains(s) {
 			return false
 		}
 	}

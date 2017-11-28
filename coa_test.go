@@ -111,7 +111,7 @@ func TestSaveAccount(t *testing.T) {
 	if len(accounts) != 1 {
 		t.Error("The account must be persisted")
 	}
-	if !collection(a.Tags).contains("detail") {
+	if !a.Tags.Contains("detail") {
 		t.Errorf("a.Tags %v does not contain detail", a.Tags)
 	}
 	_, err = r.SaveAccount(coa.Id, &Account{Number: "1.1", Name: "a1.1",
@@ -126,10 +126,10 @@ func TestSaveAccount(t *testing.T) {
 	if len(accounts) != 2 {
 		t.Error("The account must be persisted")
 	}
-	if !collection(accounts[0].Tags).contains("summary") {
+	if !accounts[0].Tags.Contains("summary") {
 		t.Errorf("accounts[0].Tags %v does not contains summary", accounts[0].Tags)
 	}
-	if !collection(accounts[1].Tags).contains("detail") {
+	if !accounts[1].Tags.Contains("detail") {
 		t.Errorf("accounts[1].Tags %v does not contains detail", accounts[1].Tags)
 	}
 	if coa.RetainedEarningsAccount != "" {
@@ -162,7 +162,7 @@ func TestIfAllAccountsIsSorted(t *testing.T) {
 	if accounts[0].Number != "1" || accounts[1].Number != "2" {
 		t.Errorf("Expected sorted but was %v %v", accounts[0].Number, accounts[1].Number)
 	}
-	idx, err := r.Indexes(coa.Id, []string{"1", "2"}, nil)
+	idx, err := r.Indexes(coa.Id, []string{accounts[0].Id, accounts[1].Id}, nil)
 	check(t, err)
 	if idx[0] != 1 || idx[1] != 0 {
 		t.Errorf("Expected 1 0 but was %v %v", idx[0], idx[1])
