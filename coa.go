@@ -13,7 +13,7 @@ import (
 )
 
 type ChartOfAccounts struct {
-	Id                      string    `json:"id"`
+	Id                      string    `json:"_id"`
 	Name                    string    `json:"name"`
 	RetainedEarningsAccount string    `json:"retainedEarningsAccount"`
 	User                    string    `json:"user"`
@@ -23,7 +23,7 @@ type ChartOfAccounts struct {
 }
 
 type Account struct {
-	Id      string    `json:"id"`
+	Id      string    `json:"_id"`
 	Number  string    `json:"number"`
 	Name    string    `json:"name"`
 	Tags    Tags      `json:"tags"`
