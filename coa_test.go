@@ -7,8 +7,18 @@ import (
 
 type store map[string][]byte
 
-func (s store) Get(key []byte) ([]byte, error)     { return s[string(key)], nil }
-func (s store) Put(key []byte, value []byte) error { s[string(key)] = value; return nil }
+func (s store) Get(key []byte) ([]byte, error) {
+	b := s[string(key)]
+	result := make([]byte, len(b))
+	copy(result, b)
+	return result, nil
+}
+func (s store) Put(key []byte, value []byte) error {
+	b := make([]byte, len(value))
+	copy(b, value)
+	s[string(key)] = b
+	return nil
+}
 
 func TestSaveChartOfAccounts(t *testing.T) {
 	r := NewCoaRepository(store{})
@@ -153,18 +163,20 @@ func TestIfAllAccountsIsSorted(t *testing.T) {
 	r := NewCoaRepository(store{})
 	coa, err := r.SaveChartOfAccounts(&ChartOfAccounts{Name: "coa"})
 	check(t, err)
+	a1, err := r.SaveAccount(coa.Id, &Account{Number: "1", Name: "a1", Tags: []string{"balanceSheet", "increaseOnDebit"}})
+	check(t, err)
 	_, err = r.SaveAccount(coa.Id, &Account{Number: "2", Name: "a2", Tags: []string{"balanceSheet", "increaseOnDebit"}})
 	check(t, err)
-	_, err = r.SaveAccount(coa.Id, &Account{Number: "1", Name: "a1", Tags: []string{"balanceSheet", "increaseOnDebit"}})
+	_, err = r.SaveAccount(coa.Id, &Account{Number: "11", Name: "a11", Parent: a1.Id, Tags: []string{"balanceSheet", "increaseOnDebit"}})
 	check(t, err)
 	accounts, err := r.AllAccounts(coa.Id)
 	check(t, err)
-	if accounts[0].Number != "1" || accounts[1].Number != "2" {
+	if accounts[0].Number != "1" || accounts[1].Number != "11" || accounts[2].Number != "2" {
 		t.Errorf("Expected sorted but was %v %v", accounts[0].Number, accounts[1].Number)
 	}
-	idx, err := r.Indexes(coa.Id, []string{accounts[0].Id, accounts[1].Id}, nil)
+	idx, err := r.Indexes(coa.Id, []string{accounts[0].Id, accounts[1].Id, accounts[2].Id}, nil)
 	check(t, err)
-	if idx[0] != 1 || idx[1] != 0 {
+	if idx[0] != 0 || idx[1] != 2 || idx[2] != 1 {
 		t.Errorf("Expected 1 0 but was %v %v", idx[0], idx[1])
 	}
 }

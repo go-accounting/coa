@@ -72,7 +72,7 @@ func NewCoaRepository(store KeyValueStore) *CoaRepository {
 
 func (r *CoaRepository) AllChartsOfAccounts() (ChartsOfAccounts, error) {
 	var result ChartsOfAccounts
-	err := r.getAndUnmarshal("charts-of-accounts", &result)
+	err := r.get("charts-of-accounts", &result)
 	if err != nil {
 		return nil, err
 	}
@@ -117,11 +117,7 @@ func (r *CoaRepository) SaveChartOfAccounts(coa *ChartOfAccounts) (*ChartOfAccou
 		}
 	}
 	sort.Slice(coas, func(i, j int) bool { return strings.Compare(coas[i].Name, coas[j].Name) < 0 })
-	data, err := coas.MarshalMsg(nil)
-	if err != nil {
-		return nil, err
-	}
-	err = r.store.Put([]byte("charts-of-accounts"), data)
+	err = r.put("charts-of-accounts", coas)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +129,7 @@ func (r *CoaRepository) AllAccounts(coaid string) (Accounts, error) {
 		return nil, fmt.Errorf("Invalid argument: coaid is empty")
 	}
 	var result Accounts
-	err := r.getAndUnmarshal("accounts/"+coaid, &result)
+	err := r.get("accounts/"+coaid, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -190,7 +186,8 @@ func (r *CoaRepository) SaveAccount(coaid string, account *Account) (*Account, e
 	if msg := account.ValidationMessage(coaid, r); msg != "" {
 		return nil, fmt.Errorf(msg)
 	}
-	accounts, err := r.AllAccounts(coaid)
+	var accounts Accounts
+	err := r.get("accounts/"+coaid, &accounts)
 	if err != nil {
 		return nil, err
 	}
@@ -206,11 +203,7 @@ func (r *CoaRepository) SaveAccount(coaid string, account *Account) (*Account, e
 			}
 		}
 	}
-	data, err := accounts.MarshalMsg(nil)
-	if err != nil {
-		return nil, err
-	}
-	err = r.store.Put([]byte("accounts/"+coaid), data)
+	err = r.put("accounts/"+coaid, accounts)
 	if err != nil {
 		return nil, err
 	}
@@ -255,7 +248,7 @@ func (r *CoaRepository) Indexes(coaid string, accountsIds []string, tags []strin
 		return nil, fmt.Errorf("Invalid argument: coaid is empty")
 	}
 	var accounts Accounts
-	err := r.getAndUnmarshal("accounts/"+coaid, &accounts)
+	err := r.get("accounts/"+coaid, &accounts)
 	if err != nil {
 		return nil, err
 	}
@@ -339,7 +332,16 @@ func (account *Account) ValidationMessage(coaid string, r *CoaRepository) string
 	return ""
 }
 
-func (r *CoaRepository) getAndUnmarshal(key string, v msgp.Unmarshaler) error {
+func (r *CoaRepository) put(key string, v interface{}) error {
+	// data, err := json.Marshal(v)
+	data, err := v.(msgp.Marshaler).MarshalMsg(nil)
+	if err != nil {
+		return err
+	}
+	return r.store.Put([]byte(key), data)
+}
+
+func (r *CoaRepository) get(key string, v interface{}) error {
 	data, err := r.store.Get([]byte(key))
 	if err != nil {
 		return err
@@ -347,11 +349,24 @@ func (r *CoaRepository) getAndUnmarshal(key string, v msgp.Unmarshaler) error {
 	if data == nil || len(data) == 0 {
 		return nil
 	}
-	_, err = v.UnmarshalMsg(data)
+	_, err = v.(msgp.Unmarshaler).UnmarshalMsg(data)
+	// err = json.Unmarshal(data, v)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func (aa Accounts) String() string {
+	ss := make([]string, len(aa))
+	for i, a := range aa {
+		ss[i] = a.String()
+	}
+	return strings.Join(ss, ", ")
+}
+
+func (a *Account) String() string {
+	return fmt.Sprint(*a)
 }
 
 func (c Tags) IndexOf(s string) int {
